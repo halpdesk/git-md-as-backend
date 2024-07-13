@@ -1,0 +1,12 @@
+[
+    {
+        "title": "First entry",
+        "description": "This is my first entry",
+        "file": "entry-1.md"
+    },
+    {
+        "title": "Second entry",
+        "description": "This is my second entry",
+        "file": "entry-2.md"
+    }
+]
