@@ -3,7 +3,6 @@ from http.server import SimpleHTTPRequestHandler, HTTPServer
 
 class CustomHandler(SimpleHTTPRequestHandler):
     def send_error(self, code, message=None):
-        # Check if the error code is 404
         if code == 404:
             # Serve custom 404 page
             self.send_response(404)
@@ -11,6 +10,7 @@ class CustomHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             with open('404.html', 'rb') as file:
                 self.wfile.write(file.read())
+            
         else:
             # Default behavior for other errors
             super().send_error(code, message)
