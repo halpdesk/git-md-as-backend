@@ -1,0 +1,12 @@
+[
+    {
+        "title": "Posts",
+        "description": "Start page",
+        "file": "posts.html"
+    },
+    {
+        "title": "About",
+        "description": "About me",
+        "file": "about.html"
+    }
+]

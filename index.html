@@ -8,8 +8,45 @@
     <script src="app/pagedown/Markdown.Converter.js"></script>
     <script src="app/pagedown/Markdown.Sanitizer.js"></script>
     <script src="index.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            run("content", (content) => {
+                return content.replace(/#/, `B`);
+            });
+
+            const pageAnchors = await getPageAnchors();
+            
+            // Display the page anchors
+            const pagesElement = document.getElementById('pages');
+            pageAnchors.forEach(pageAnchor => {
+                const liElement = document.createElement('li');
+                liElement.innerHTML = `${pageAnchor.element.outerHTML} - ${pageAnchor.description}`;
+                pagesElement.appendChild(liElement);
+            });
+            
+            
+            
+        });
+        
+        xhr.addEventListener('load', async (event) => {
+            console.log(event);
+            
+            const postsElement = document.getElementById('posts');
+            if (postsElement !== undefined) {
+                const postAnchors = await getPostAnchors();
+        
+                // Display the post anchors
+                postAnchors.forEach(postAnchor => {
+                    const liElement = document.createElement('li');
+                    liElement.innerHTML = `${postAnchor.element.outerHTML} - ${postAnchor.description}`;
+                    postsElement.appendChild(liElement);
+                });
+            }
+        });
+    </script>
 </head>
 <body>
-    <div id="entries"></div>
+    <ul id="pages"></ul>
     <div id="content"></div>
 </body>
+</html>

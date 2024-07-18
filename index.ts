@@ -1,15 +1,14 @@
 const POST_PATH_PART: string = "posts";
+const PAGES_PATH_PART: string = "pages";
 
 const getPathParts = (url:string) : Array<string> => {
-    const link = document.createElement('a');
-    link.href = url;
-    return link.pathname.split('/').filter(part => part !== '');
+    return url.split('/').filter(part => part !== '');
 }
 
 const getRootPath = () : string => {
     const pathParts = getPathParts(window.location.pathname);
     for (var i = 0; i < pathParts.length; i++) {
-        if (pathParts[i] === POST_PATH_PART) {
+        if (pathParts[i] === POST_PATH_PART || pathParts[i] === PAGES_PATH_PART) {
             break;
         }
     }
@@ -25,142 +24,212 @@ const setWindowTitle = (title: string) : void => {
     document.title = title;
 }
 
-const handlePopState = (element: HTMLElement, entryDecorator: Function | undefined) => {
+const handlePopState = (element: HTMLElement, postDecorator: Function | undefined) => {
     return (event: PopStateEvent) => {
         const state = event.state;
-        if (state) {
-            if (state.path && state.title) {   
-                loadFile(state.path, element, entryDecorator);
+        if (state !== null) {
+            console.log(`PopState: url: ${state.url}`);
+            loadView(state.url, element, postDecorator);
+        } else {
+            console.log('PopState: state is null');
+        }
+    }
+}
+
+const handleLinkClick = (element: HTMLElement, postDecorator: Function | undefined) => {
+    return (event: Event) => {
+        if ((event.target as Element).classList.contains('xhr-link')) {
+            event.preventDefault();
+            const url = (event.target as HTMLAnchorElement).href;
+            console.log(`Navigated to ${url}`);
+            history.pushState({ url: url }, "", url);
+            if ((event.target as Element).classList.contains('post-link')) {
+                loadView(url, element, postDecorator);
             } else {
-                loadHome(element);
+                loadView(url, element, undefined);
             }
         }
     }
 }
 
-const handleLinkClickOnEntry = (entry: Entry, element: HTMLElement, entryDecorator: Function | undefined) => {
-    return (event: Event) => {
-        event.preventDefault();
-        console.log(`Navigated to: ${entry.file} (history: ${ROOT_PATH}/${POST_PATH_PART}/${entry.file} title: ${entry.title})`);
-        history.pushState({ path: entry.file, title: entry.title }, "", `${ROOT_PATH}/${POST_PATH_PART}/${entry.file}`);
-        loadEntry(entry.file, element, entryDecorator);
-    }
+
+/*
+ *  Posts are loaded from a JSON file that contains an array of Post objects.
+ */
+interface Post {
+    file: string;
+    title: string;
+    description: string;
+}
+const loadedPosts: Map<string, Post> = new Map<string, Post>();
+
+const getPosts = () : Promise<Map<string, Post>> =>
+    loadedPosts.size > 0 ? Promise.resolve(loadedPosts) :
+    fetch(`${ROOT_PATH}/_posts/posts.json`)
+        .then(response => response.text())
+        .then(content => {
+            loadedPosts.clear()
+            const posts = JSON.parse(content)
+            for (const post of posts) {
+                loadedPosts.set(post.file, post)
+            }
+            return loadedPosts
+        })
+        .catch(err => {
+            console.log('Error loading post posts:', err)
+            return loadedPosts
+        })
+        
+const getPost = (file: string) : Promise<Post> =>
+    getPosts()
+        .then(posts => {
+            if (posts.has(file)) {
+                return posts.get(file) ?? { file: '', title: '', description: '' } as Post
+            } else {
+                throw new Error(`Post not found for ${file}`)
+            }
+        })
+
+interface PostAnchor {
+    element: HTMLElement;
+    description: string;
+}
+const getPostAnchors = async (): Promise<Array<PostAnchor>> => {
+    const postAnchors = Array<PostAnchor>();
+    await getPosts()
+        .then(posts => {
+            posts.forEach((post, i) => {
+                const anchorElement = document.createElement('a');
+                anchorElement.href = `/${POST_PATH_PART}/${post.file}`;
+                anchorElement.textContent = post.title;
+                anchorElement.id = `${post.file}-${i}`;
+                anchorElement.classList.add('xhr-link', 'post-link');
+                postAnchors.push({ element: anchorElement, description: post.description });
+            });
+        }).catch(err => {
+            console.log('Error fetching data:', err)
+        })
+    return postAnchors;
+}
+        
+
+/*
+ *  Pages are loaded from a JSON file that contains an array of Post objects.
+ */
+interface Page {
+    file: string;
+    title: string;
+    description: string;
+}
+const loadedPages: Map<string, Page> = new Map<string, Page>();
+
+const getPages = () : Promise<Map<string, Page>> =>
+    loadedPages.size > 0 ? Promise.resolve(loadedPages) :
+    fetch(`${ROOT_PATH}/_pages/pages.json`)
+        .then(response => response.text())
+        .then(content => {
+            loadedPages.clear()
+            const pages = JSON.parse(content)
+            for (const page of pages) {
+                loadedPages.set(page.file, page)
+            }
+            return loadedPages
+        })
+        .catch(err => {
+            console.log('Error loading pages:', err)
+            return loadedPages
+        })
+        
+const getPage = (file: string) : Promise<Page> =>
+    getPages()
+        .then(pages => {
+            if (pages.has(file)) {
+                return pages.get(file) ?? { file: '', title: '', description: '' } as Page
+            } else {
+                throw new Error(`Page not found for ${file}`)
+            }
+        })
+        
+
+interface PageAnchor {
+    element: HTMLElement;
+    description: string;
+}
+const getPageAnchors = async (): Promise<Array<PageAnchor>> => {
+    const pageAnchors = Array<PageAnchor>();
+    await getPages()
+        .then(pages => {
+            pages.forEach((page, i) => {
+                const anchorElement = document.createElement('a');
+                anchorElement.href = `/${PAGES_PATH_PART}/${page.file}`;
+                anchorElement.textContent = page.title;
+                anchorElement.id = `${page.file}-${i}`;
+                anchorElement.classList.add('xhr-link');
+                pageAnchors.push({ element: anchorElement, description: page.description });
+            });
+        }).catch(err => {
+            console.log('Error fetching data:', err)
+        })
+    return pageAnchors;
 }
 
-const loadUrl = (url: string) : Promise<string> =>
-    fetch(`${url}`, { mode: 'no-cors'})
+/*
+ *  Fetches the content of a view from the server.
+ */
+const fetchView = (url: string, slug: string, title: string) : Promise<string> => {
+    console.log(`fetchView: url: ${url}, slug: ${slug}, title: ${title}`)
+    return fetch(`${url}`, { mode: 'no-cors'})
         .then(response => response.text())
         .then(content => content)
         .catch(err => {
             console.log(`Error fetching ${url}: ${err}`)
             return ''
         })
-
-interface Entry {
-    file: string;
-    title: string;
-    description: string;
 }
 
 /*
- *  Entries are loaded from a JSON file that contains an array of Entry objects.
+ *  Loads the fetched view into the content element.
  */
-const loadedEntries: Map<string, Entry> = new Map<string, Entry>();
-
-const getEntries = () : Promise<Map<string, Entry>> =>
-    loadedEntries.size > 0 ? Promise.resolve(loadedEntries) :
-    fetch(`${ROOT_PATH}/entries/entries.json`)
-        .then(response => response.text())
-        .then(content => {
-            loadedEntries.clear()
-            const entries = JSON.parse(content)
-            for (const entry of entries) {
-                loadedEntries.set(entry.file, entry)
-            }
-            return loadedEntries
-        })
-        .catch(err => {
-            console.log('Error loading post entries:', err)
-            return loadedEntries
-        })
-        
-const getEntry = (file: string) : Promise<Entry> =>
-    getEntries()
-        .then(entries => {
-            if (entries.has(file)) {
-                return entries.get(file) ?? { file: '', title: '', description: '' } as Entry
-            } else {
-                throw new Error(`Entry not found for ${file}`)
-            }
-        })
-        
-const buildEntriesMenu = (entriesElement: HTMLElement, contentElement: HTMLElement, entryDecorator: Function | undefined) =>
-    getEntries()
-        .then(entries => {
-            entries.forEach(entry => {
-                const liElement = document.createElement('li');
-                const anchorElement = document.createElement('a');
-                anchorElement.href = `/${POST_PATH_PART}/${entry.file}`;
-                anchorElement.textContent = entry.title;
-                liElement.innerHTML = `${anchorElement.outerHTML} - ${entry.description}`;
-                entriesElement.appendChild(liElement);
-                entriesElement.lastChild?.firstChild?.addEventListener('click', handleLinkClickOnEntry(entry, contentElement, entryDecorator));
-            });
-        }).catch(err => {
-            console.log('Error fetching data:', err)
-        })
-
-const loadEntry = (file: string, element: HTMLElement, entryDecorator: Function | undefined) => {
-    getEntry(file)
-        .then(entry => {
-            setWindowTitle(entry.title);
-            loadUrl(`${ROOT_PATH}/entries/${entry.file}`)
-                .then(content => {
-                    element.textContent = entryDecorator !== undefined ? entryDecorator(content) : content;
-                }).catch(err => {
-                    console.log('Error fetching data:', err)
-                })
-        })
-        .catch(err => {
-            console.log('Error fetching data:', err)
-        })
-}
-
-const loadHome = (element: HTMLElement) => {
-    const title = "Home";
-    const file = "home.html"
-    setWindowTitle(title);
-    loadUrl(`${ROOT_PATH}/${file}`)
-        .then(content => {
-            element.textContent = content;
-        }).catch(err => {
-            console.log('Error fetching data:', err)
-        })
-}
-
-const loadFile = (file: string, element: HTMLElement, entryDecorator: Function | undefined) => {
-    const pathParts = getPathParts(window.location.pathname)
-    if (pathParts.includes(POST_PATH_PART)) {
-        loadEntry(file, element, entryDecorator);
-    } else {
-        loadHome(element);
+const loadView = (url: string, element: HTMLElement, postDecorator: Function | undefined) => {
+    if (url != undefined) {
+        const pathParts = getPathParts(url)
+        console.log(`loadView: pathParts: ${pathParts}`)
+        if (pathParts.includes(POST_PATH_PART)) {
+            getPost(pathParts[pathParts.length-1]).then(post => {
+                setWindowTitle(post.title);
+                fetchView(`${ROOT_PATH}/_posts/${post.file}`, `posts/${post.file}`, post.title)
+                    .then(content => {
+                        element.textContent = postDecorator !== undefined ? postDecorator(content) : content;
+                    }).catch(err => {
+                        console.log('Error fetching data:', err)
+                    })
+            })
+            .catch(err => {
+                console.log('Error fetching data:', err)
+            })
+        }
+        if (pathParts.includes(PAGES_PATH_PART)) {
+            getPage(pathParts[pathParts.length-1]).then(page => {
+                setWindowTitle(page.title);
+                fetchView(`${ROOT_PATH}/_pages/${page.file}`, `pages/${page.file}`, page.title)
+                    .then(content => {
+                        element.innerHTML = content;
+                    }).catch(err => {
+                        console.log('Error fetching data:', err)
+                    })
+            })
+            .catch(err => {
+                console.log('Error fetching data:', err)
+            })
+        }
     }
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const CONTENT_ELEMENT = document.getElementById('content') ?? document.createElement('div');
-    const ENTRIES_ELEMENT = document.getElementById('entries') ?? document.createElement('div');
-    const pathParts = getPathParts(window.location.pathname)
+const run = async (contentId: string, pagesElement: HTMLElement, postsElement: HTMLElement, postDecorator: Function | undefined) => {
+    const CONTENT_ELEMENT = document.getElementById(contentId) ?? document.createElement('div');
+    loadView(window.location.href, CONTENT_ELEMENT, postDecorator);
     
-    const entryDecorator = (content: string) : string => {
-        return content.replace(/#/, `B`);
-    }
-    const file = pathParts[pathParts.length - 1];
-    loadFile(file, CONTENT_ELEMENT, entryDecorator);
-    
-    await buildEntriesMenu(ENTRIES_ELEMENT, CONTENT_ELEMENT, entryDecorator);
-    
-    window.addEventListener('popstate', handlePopState(CONTENT_ELEMENT, entryDecorator));
-})
-
+    window.addEventListener('popstate', handlePopState(CONTENT_ELEMENT, postDecorator));
+    document.addEventListener('click', handleLinkClick(CONTENT_ELEMENT, postDecorator));
+}
 // https://medium.com/swlh/using-react-router-on-github-pages-2702afdd5d0c

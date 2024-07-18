@@ -9,15 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 const POST_PATH_PART = "posts";
+const PAGES_PATH_PART = "pages";
 const getPathParts = (url) => {
-    const link = document.createElement('a');
-    link.href = url;
-    return link.pathname.split('/').filter(part => part !== '');
+    return url.split('/').filter(part => part !== '');
 };
 const getRootPath = () => {
     const pathParts = getPathParts(window.location.pathname);
     for (var i = 0; i < pathParts.length; i++) {
-        if (pathParts[i] === POST_PATH_PART) {
+        if (pathParts[i] === POST_PATH_PART || pathParts[i] === PAGES_PATH_PART) {
             break;
         }
     }
@@ -29,124 +28,175 @@ const ROOT_PATH = getRootPath();
 const setWindowTitle = (title) => {
     document.title = title;
 };
-const handlePopState = (element, entryDecorator) => {
+const handlePopState = (element, postDecorator) => {
     return (event) => {
         const state = event.state;
-        if (state) {
-            if (state.path && state.title) {
-                loadFile(state.path, element, entryDecorator);
+        if (state !== null) {
+            console.log(`PopState: url: ${state.url}`);
+            loadView(state.url, element, postDecorator);
+        }
+        else {
+            console.log('PopState: state is null');
+        }
+    };
+};
+const handleLinkClick = (element, postDecorator) => {
+    return (event) => {
+        if (event.target.classList.contains('xhr-link')) {
+            event.preventDefault();
+            const url = event.target.href;
+            console.log(`Navigated to ${url}`);
+            history.pushState({ url: url }, "", url);
+            if (event.target.classList.contains('post-link')) {
+                loadView(url, element, postDecorator);
             }
             else {
-                loadHome(element);
+                loadView(url, element, undefined);
             }
         }
     };
 };
-const handleLinkClickOnEntry = (entry, element, entryDecorator) => {
-    return (event) => {
-        event.preventDefault();
-        console.log(`Navigated to: ${entry.file} (history: ${ROOT_PATH}/${POST_PATH_PART}/${entry.file} title: ${entry.title})`);
-        history.pushState({ path: entry.file, title: entry.title }, "", `${ROOT_PATH}/${POST_PATH_PART}/${entry.file}`);
-        loadEntry(entry.file, element, entryDecorator);
-    };
-};
-const loadUrl = (url) => fetch(`${url}`, { mode: 'no-cors' })
-    .then(response => response.text())
-    .then(content => content)
-    .catch(err => {
-    console.log(`Error fetching ${url}: ${err}`);
-    return '';
-});
-/*
- *  Entries are loaded from a JSON file that contains an array of Entry objects.
- */
-const loadedEntries = new Map();
-const getEntries = () => loadedEntries.size > 0 ? Promise.resolve(loadedEntries) :
-    fetch(`${ROOT_PATH}/entries/entries.json`)
+const loadedPosts = new Map();
+const getPosts = () => loadedPosts.size > 0 ? Promise.resolve(loadedPosts) :
+    fetch(`${ROOT_PATH}/_posts/posts.json`)
         .then(response => response.text())
         .then(content => {
-        loadedEntries.clear();
-        const entries = JSON.parse(content);
-        for (const entry of entries) {
-            loadedEntries.set(entry.file, entry);
+        loadedPosts.clear();
+        const posts = JSON.parse(content);
+        for (const post of posts) {
+            loadedPosts.set(post.file, post);
         }
-        return loadedEntries;
+        return loadedPosts;
     })
         .catch(err => {
-        console.log('Error loading post entries:', err);
-        return loadedEntries;
+        console.log('Error loading post posts:', err);
+        return loadedPosts;
     });
-const getEntry = (file) => getEntries()
-    .then(entries => {
+const getPost = (file) => getPosts()
+    .then(posts => {
     var _a;
-    if (entries.has(file)) {
-        return (_a = entries.get(file)) !== null && _a !== void 0 ? _a : { file: '', title: '', description: '' };
+    if (posts.has(file)) {
+        return (_a = posts.get(file)) !== null && _a !== void 0 ? _a : { file: '', title: '', description: '' };
     }
     else {
-        throw new Error(`Entry not found for ${file}`);
+        throw new Error(`Post not found for ${file}`);
     }
 });
-const buildEntriesMenu = (entriesElement, contentElement, entryDecorator) => getEntries()
-    .then(entries => {
-    entries.forEach(entry => {
-        var _a, _b;
-        const liElement = document.createElement('li');
-        const anchorElement = document.createElement('a');
-        anchorElement.href = `/${POST_PATH_PART}/${entry.file}`;
-        anchorElement.textContent = entry.title;
-        liElement.innerHTML = `${anchorElement.outerHTML} - ${entry.description}`;
-        entriesElement.appendChild(liElement);
-        (_b = (_a = entriesElement.lastChild) === null || _a === void 0 ? void 0 : _a.firstChild) === null || _b === void 0 ? void 0 : _b.addEventListener('click', handleLinkClickOnEntry(entry, contentElement, entryDecorator));
-    });
-}).catch(err => {
-    console.log('Error fetching data:', err);
-});
-const loadEntry = (file, element, entryDecorator) => {
-    getEntry(file)
-        .then(entry => {
-        setWindowTitle(entry.title);
-        loadUrl(`${ROOT_PATH}/entries/${entry.file}`)
-            .then(content => {
-            element.textContent = entryDecorator !== undefined ? entryDecorator(content) : content;
-        }).catch(err => {
-            console.log('Error fetching data:', err);
+const getPostAnchors = () => __awaiter(void 0, void 0, void 0, function* () {
+    const postAnchors = Array();
+    yield getPosts()
+        .then(posts => {
+        posts.forEach((post, i) => {
+            const anchorElement = document.createElement('a');
+            anchorElement.href = `/${POST_PATH_PART}/${post.file}`;
+            anchorElement.textContent = post.title;
+            anchorElement.id = `${post.file}-${i}`;
+            anchorElement.classList.add('xhr-link', 'post-link');
+            postAnchors.push({ element: anchorElement, description: post.description });
         });
-    })
-        .catch(err => {
-        console.log('Error fetching data:', err);
-    });
-};
-const loadHome = (element) => {
-    const title = "Home";
-    const file = "home.html";
-    setWindowTitle(title);
-    loadUrl(`${ROOT_PATH}/${file}`)
-        .then(content => {
-        element.textContent = content;
     }).catch(err => {
         console.log('Error fetching data:', err);
     });
-};
-const loadFile = (file, element, entryDecorator) => {
-    const pathParts = getPathParts(window.location.pathname);
-    if (pathParts.includes(POST_PATH_PART)) {
-        loadEntry(file, element, entryDecorator);
+    return postAnchors;
+});
+const loadedPages = new Map();
+const getPages = () => loadedPages.size > 0 ? Promise.resolve(loadedPages) :
+    fetch(`${ROOT_PATH}/_pages/pages.json`)
+        .then(response => response.text())
+        .then(content => {
+        loadedPages.clear();
+        const pages = JSON.parse(content);
+        for (const page of pages) {
+            loadedPages.set(page.file, page);
+        }
+        return loadedPages;
+    })
+        .catch(err => {
+        console.log('Error loading pages:', err);
+        return loadedPages;
+    });
+const getPage = (file) => getPages()
+    .then(pages => {
+    var _a;
+    if (pages.has(file)) {
+        return (_a = pages.get(file)) !== null && _a !== void 0 ? _a : { file: '', title: '', description: '' };
     }
     else {
-        loadHome(element);
+        throw new Error(`Page not found for ${file}`);
+    }
+});
+const getPageAnchors = () => __awaiter(void 0, void 0, void 0, function* () {
+    const pageAnchors = Array();
+    yield getPages()
+        .then(pages => {
+        pages.forEach((page, i) => {
+            const anchorElement = document.createElement('a');
+            anchorElement.href = `/${PAGES_PATH_PART}/${page.file}`;
+            anchorElement.textContent = page.title;
+            anchorElement.id = `${page.file}-${i}`;
+            anchorElement.classList.add('xhr-link');
+            pageAnchors.push({ element: anchorElement, description: page.description });
+        });
+    }).catch(err => {
+        console.log('Error fetching data:', err);
+    });
+    return pageAnchors;
+});
+/*
+ *  Fetches the content of a view from the server.
+ */
+const fetchView = (url, slug, title) => {
+    console.log(`fetchView: url: ${url}, slug: ${slug}, title: ${title}`);
+    return fetch(`${url}`, { mode: 'no-cors' })
+        .then(response => response.text())
+        .then(content => content)
+        .catch(err => {
+        console.log(`Error fetching ${url}: ${err}`);
+        return '';
+    });
+};
+/*
+ *  Loads the fetched view into the content element.
+ */
+const loadView = (url, element, postDecorator) => {
+    if (url != undefined) {
+        const pathParts = getPathParts(url);
+        console.log(`loadView: pathParts: ${pathParts}`);
+        if (pathParts.includes(POST_PATH_PART)) {
+            getPost(pathParts[pathParts.length - 1]).then(post => {
+                setWindowTitle(post.title);
+                fetchView(`${ROOT_PATH}/_posts/${post.file}`, `posts/${post.file}`, post.title)
+                    .then(content => {
+                    element.textContent = postDecorator !== undefined ? postDecorator(content) : content;
+                }).catch(err => {
+                    console.log('Error fetching data:', err);
+                });
+            })
+                .catch(err => {
+                console.log('Error fetching data:', err);
+            });
+        }
+        if (pathParts.includes(PAGES_PATH_PART)) {
+            getPage(pathParts[pathParts.length - 1]).then(page => {
+                setWindowTitle(page.title);
+                fetchView(`${ROOT_PATH}/_pages/${page.file}`, `pages/${page.file}`, page.title)
+                    .then(content => {
+                    element.innerHTML = content;
+                }).catch(err => {
+                    console.log('Error fetching data:', err);
+                });
+            })
+                .catch(err => {
+                console.log('Error fetching data:', err);
+            });
+        }
     }
 };
-document.addEventListener('DOMContentLoaded', () => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
-    const CONTENT_ELEMENT = (_a = document.getElementById('content')) !== null && _a !== void 0 ? _a : document.createElement('div');
-    const ENTRIES_ELEMENT = (_b = document.getElementById('entries')) !== null && _b !== void 0 ? _b : document.createElement('div');
-    const pathParts = getPathParts(window.location.pathname);
-    const entryDecorator = (content) => {
-        return content.replace(/#/, `B`);
-    };
-    const file = pathParts[pathParts.length - 1];
-    loadFile(file, CONTENT_ELEMENT, entryDecorator);
-    yield buildEntriesMenu(ENTRIES_ELEMENT, CONTENT_ELEMENT, entryDecorator);
-    window.addEventListener('popstate', handlePopState(CONTENT_ELEMENT, entryDecorator));
-}));
+const run = (contentId, pagesElement, postsElement, postDecorator) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const CONTENT_ELEMENT = (_a = document.getElementById(contentId)) !== null && _a !== void 0 ? _a : document.createElement('div');
+    loadView(window.location.href, CONTENT_ELEMENT, postDecorator);
+    window.addEventListener('popstate', handlePopState(CONTENT_ELEMENT, postDecorator));
+    document.addEventListener('click', handleLinkClick(CONTENT_ELEMENT, postDecorator));
+});
 // https://medium.com/swlh/using-react-router-on-github-pages-2702afdd5d0c
