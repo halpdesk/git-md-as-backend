@@ -8,5 +8,5 @@ It also manages the 404.html page in the same way as as GitHub Pages does.
 Run it by:
 
 ```bash
-python3 ./simple-server/server.py
+tsc; python3 ./simple-server/server.py
 ```
