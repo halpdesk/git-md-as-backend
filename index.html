@@ -5,45 +5,9 @@
     <meta charset="utf-8">
     <meta name="author" content="Daniel Wiltshire Leppänen">
     <link rel="stylesheet" href="page.css">
-    <script src="app/pagedown/Markdown.Converter.js"></script>
-    <script src="app/pagedown/Markdown.Sanitizer.js"></script>
-    <script src="index.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            run("content", (content) => {
-                return content.replace(/#/, `B`);
-            });
-
-            const pageAnchors = await getPageAnchors();
-            
-            // Display the page anchors
-            const pagesElement = document.getElementById('pages');
-            pageAnchors.forEach(pageAnchor => {
-                const liElement = document.createElement('li');
-                liElement.innerHTML = `${pageAnchor.element.outerHTML} - ${pageAnchor.description}`;
-                pagesElement.appendChild(liElement);
-            });
-            
-            
-            
-        });
-        
-        xhr.addEventListener('load', async (event) => {
-            console.log(event);
-            
-            const postsElement = document.getElementById('posts');
-            if (postsElement !== undefined) {
-                const postAnchors = await getPostAnchors();
-        
-                // Display the post anchors
-                postAnchors.forEach(postAnchor => {
-                    const liElement = document.createElement('li');
-                    liElement.innerHTML = `${postAnchor.element.outerHTML} - ${postAnchor.description}`;
-                    postsElement.appendChild(liElement);
-                });
-            }
-        });
-    </script>
+    <script src="app/showdown.js"></script>
+    <script type="module" src="app/custom-github-spa.js"></script>
+    <script type="module" src="index.js"></script>
 </head>
 <body>
     <ul id="pages"></ul>

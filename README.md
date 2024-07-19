@@ -10,3 +10,7 @@ Run it by:
 ```bash
 tsc; python3 ./simple-server/server.py
 ```
+
+## Notes
+
+Check https://modern-web.dev/docs/dev-server/overview/
