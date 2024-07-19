@@ -8,14 +8,16 @@ const getPathParts = (url:string) : Array<string> => {
 
 const getRootPath = () : string => {
     const pathParts = getPathParts(window.location.pathname);
+    console.log(`pathParts: ${pathParts}`);
     for (var i = 0; i < pathParts.length; i++) {
         if (pathParts[i] === POST_PATH_PART || pathParts[i] === PAGES_PATH_PART) {
+            console.log(`i: ${i}`);
             break;
         }
     }
     const l = window.location;
-    
     const root = `${l.protocol}//${l.hostname}${(l.port ? ':' + l.port : '')}` + "/" + pathParts.slice(0, i).join('/');
+    console.log(`Root path: ${root}`);
     return root.endsWith('/') ? root.slice(0, -1) : root;
 }
 
