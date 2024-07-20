@@ -5150,7 +5150,6 @@ if (typeof define === 'function' && define.amd) {
 
 // Regular Browser loader
 } else {
-  console.log("root: ", root)
   root.showdown = showdown;
 }
 }).call(this);

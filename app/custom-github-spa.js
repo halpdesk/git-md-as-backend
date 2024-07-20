@@ -14,13 +14,16 @@ const getPathParts = (url) => {
 };
 const getRootPath = () => {
     const pathParts = getPathParts(window.location.pathname);
+    console.log(`pathParts: ${pathParts}`);
     for (var i = 0; i < pathParts.length; i++) {
         if (pathParts[i] === POST_PATH_PART || pathParts[i] === PAGES_PATH_PART) {
+            console.log(`i: ${i}`);
             break;
         }
     }
     const l = window.location;
     const root = `${l.protocol}//${l.hostname}${(l.port ? ':' + l.port : '')}` + "/" + pathParts.slice(0, i).join('/');
+    console.log(`Root path: ${root}`);
     return root.endsWith('/') ? root.slice(0, -1) : root;
 };
 const ROOT_PATH = getRootPath();
@@ -169,7 +172,7 @@ const loadView = (url, element, postDecorator, pageLinkCallback) => {
                 console.log('Error fetching data:', err);
             });
         }
-        if (pathParts.includes(PAGES_PATH_PART)) {
+        else if (pathParts.includes(PAGES_PATH_PART)) {
             getPage(pathParts[pathParts.length - 1]).then(page => {
                 setWindowTitle(page.title);
                 fetchView(`${ROOT_PATH}/_pages/${page.file}`, `pages/${page.file}`, page.title)
@@ -184,12 +187,17 @@ const loadView = (url, element, postDecorator, pageLinkCallback) => {
                 console.log('Error fetching data:', err);
             });
         }
+        else {
+            element.innerHTML = '';
+        }
     }
 };
 const run = (contentId, postDecorator, pageLinkCallback) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const CONTENT_ELEMENT = (_a = document.getElementById(contentId)) !== null && _a !== void 0 ? _a : document.createElement('div');
     loadView(window.location.href, CONTENT_ELEMENT, postDecorator, pageLinkCallback);
+    const url = window.location.href;
+    history.pushState({ url: url }, "", url);
     window.addEventListener('popstate', handlePopState(CONTENT_ELEMENT, postDecorator, pageLinkCallback));
     document.addEventListener('click', handleLinkClick(CONTENT_ELEMENT, postDecorator, pageLinkCallback));
 });

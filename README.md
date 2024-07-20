@@ -14,3 +14,7 @@ tsc; python3 ./simple-server/server.py
 ## Notes
 
 Check https://modern-web.dev/docs/dev-server/overview/
+
+Check https://medium.com/swlh/using-react-router-on-github-pages-2702afdd5d0c
+
+Check https://github.com/rafgraph/spa-github-pages

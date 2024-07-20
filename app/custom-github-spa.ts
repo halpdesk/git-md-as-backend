@@ -211,7 +211,7 @@ const loadView = (url: string, element: HTMLElement, postDecorator: Function | u
                 console.log('Error fetching data:', err)
             })
         }
-        if (pathParts.includes(PAGES_PATH_PART)) {
+        else if (pathParts.includes(PAGES_PATH_PART)) {
             getPage(pathParts[pathParts.length-1]).then(page => {
                 setWindowTitle(page.title);
                 fetchView(`${ROOT_PATH}/_pages/${page.file}`, `pages/${page.file}`, page.title)
@@ -226,12 +226,18 @@ const loadView = (url: string, element: HTMLElement, postDecorator: Function | u
                 console.log('Error fetching data:', err)
             })
         }
+        else {
+            element.innerHTML = '';
+        }
     }
 }
 
 const run = async (contentId: string, postDecorator: Function | undefined, pageLinkCallback: Function | undefined) => {
     const CONTENT_ELEMENT = document.getElementById(contentId) ?? document.createElement('div');
     loadView(window.location.href, CONTENT_ELEMENT, postDecorator, pageLinkCallback);
+    
+    const url = window.location.href;
+    history.pushState({ url: url }, "", url);
     
     window.addEventListener('popstate', handlePopState(CONTENT_ELEMENT, postDecorator, pageLinkCallback));
     document.addEventListener('click', handleLinkClick(CONTENT_ELEMENT, postDecorator, pageLinkCallback));
