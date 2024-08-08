@@ -90,7 +90,7 @@ const getPostAnchors = () => __awaiter(void 0, void 0, void 0, function* () {
         .then(posts => {
         posts.forEach((post, i) => {
             const anchorElement = document.createElement('a');
-            anchorElement.href = `/${POST_PATH_PART}/${post.file}`;
+            anchorElement.href = `${ROOT_PATH}/${POST_PATH_PART}/${post.file}`;
             anchorElement.textContent = post.title;
             anchorElement.id = `${post.file}-${i}`;
             anchorElement.classList.add('xhr-link', 'post-link');
@@ -133,7 +133,7 @@ const getPageAnchors = () => __awaiter(void 0, void 0, void 0, function* () {
         .then(pages => {
         pages.forEach((page, i) => {
             const anchorElement = document.createElement('a');
-            anchorElement.href = `/${PAGES_PATH_PART}/${page.file}`;
+            anchorElement.href = `${ROOT_PATH}/${PAGES_PATH_PART}/${page.file}`;
             anchorElement.textContent = page.title;
             anchorElement.id = `${page.file}-${i}`;
             anchorElement.classList.add('xhr-link', 'page-link');

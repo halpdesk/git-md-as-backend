@@ -17,6 +17,9 @@ class CustomHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         # Serve index.html at the root level
+        if self.path.startswith('/root/'):
+            self.path = self.path.replace('/root/', '/')
+            
         if self.path == '/':
             self.path = '/index.html'
 
