@@ -1,4 +1,4 @@
-# Title
+# Entry 1
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac purus sit amet. Etiam et ipsum in sapien. In nec ultrices ex. **Quisque facilisis**, ex vel lacinia venenatis, libero ex.
 

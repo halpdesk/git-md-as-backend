@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pagesElement = document.getElementById('pages') ?? document.createElement('ul');
     pageAnchors.forEach((pageAnchor: PageAnchor) => {
         const liElement = document.createElement('li');
-        liElement.innerHTML = `${pageAnchor.element.outerHTML} - ${pageAnchor.description}`;
+        liElement.innerHTML = `${pageAnchor.element.outerHTML}`;
         pagesElement.appendChild(liElement);
     }); 
 });

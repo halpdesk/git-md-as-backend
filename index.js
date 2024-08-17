@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => __awaiter(void 0, void 0, vo
     const pagesElement = (_a = document.getElementById('pages')) !== null && _a !== void 0 ? _a : document.createElement('ul');
     pageAnchors.forEach((pageAnchor) => {
         const liElement = document.createElement('li');
-        liElement.innerHTML = `${pageAnchor.element.outerHTML} - ${pageAnchor.description}`;
+        liElement.innerHTML = `${pageAnchor.element.outerHTML}`;
         pagesElement.appendChild(liElement);
     });
 }));

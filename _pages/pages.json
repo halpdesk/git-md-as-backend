@@ -1,12 +1,17 @@
 [
     {
-        "title": "Posts",
-        "description": "Start page",
-        "file": "posts.html"
+        "title": "Start",
+        "description": "Start",
+        "file": "start.html"
     },
     {
         "title": "About",
         "description": "About me",
         "file": "about.html"
+    },
+    {
+        "title": "Posts",
+        "description": "Start page",
+        "file": "posts.html"
     }
 ]
