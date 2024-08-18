@@ -7,21 +7,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { run, getPostAnchors, getPageAnchors } from './app/custom-github-spa.js';
+import { run, getPostListWithCategories, getPageAnchors } from './app/custom-github-spa.js';
 var converter = new showdown.Converter();
 document.addEventListener('DOMContentLoaded', () => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     run("content", (content) => {
         return converter.makeHtml(content);
-    }, (pageLink) => __awaiter(void 0, void 0, void 0, function* () {
-        const postsElement = document.getElementById('posts');
+    }, (url) => __awaiter(void 0, void 0, void 0, function* () {
+        var postsElement = document.getElementById('posts');
         if (postsElement !== null) {
-            console.log(`callback for ${pageLink}: postsElement: ${postsElement}`);
-            const postAnchors = yield getPostAnchors();
-            postAnchors.forEach((postAnchor) => {
-                const liElement = document.createElement('li');
-                liElement.innerHTML = `${postAnchor.element.outerHTML} - ${postAnchor.description}`;
-                postsElement.appendChild(liElement);
+            getPostListWithCategories().then((postList) => {
+                postsElement === null || postsElement === void 0 ? void 0 : postsElement.appendChild(postList);
             });
         }
     }));

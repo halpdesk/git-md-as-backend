@@ -107,15 +107,22 @@ pre {
 }
 
 h1 {
-    font-size: 0.9em;
+    font-size: 1.8em;
+    margin-bottom: 0.4em;
 }
 
 h2 {
-    font-size: 0.8em;
+    font-size: 1.6em;
+    margin-bottom: 0.2em;
 }
 
 h3 {
-    font-size: 0.7em;
+    font-size: 1.3em;
+    margin-bottom: 0.2em;
+}
+
+blockquote {
+    white-space: pre-wrap;
 }
 
 a {

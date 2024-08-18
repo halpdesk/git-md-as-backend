@@ -58,15 +58,14 @@ const handleLinkClick = (element, postDecorator, pageLinkCallback) => {
         }
     };
 };
-const loadedPosts = new Map();
-const getPosts = () => loadedPosts.size > 0 ? Promise.resolve(loadedPosts) :
+const loadedPosts = new Array();
+const getPosts = () => loadedPosts.length > 0 ? Promise.resolve(loadedPosts) :
     fetch(`${ROOT_PATH}/_posts/posts.json`)
         .then(response => response.text())
         .then(content => {
-        loadedPosts.clear();
-        const posts = JSON.parse(content);
-        for (const post of posts) {
-            loadedPosts.set(post.file, post);
+        const catgories = JSON.parse(content);
+        for (const catgory of catgories) {
+            loadedPosts.push(catgory);
         }
         return loadedPosts;
     })
@@ -75,31 +74,62 @@ const getPosts = () => loadedPosts.size > 0 ? Promise.resolve(loadedPosts) :
         return loadedPosts;
     });
 const getPost = (file) => getPosts()
-    .then(posts => {
-    var _a;
-    if (posts.has(file)) {
-        return (_a = posts.get(file)) !== null && _a !== void 0 ? _a : { file: '', title: '', description: '' };
+    .then(categories => {
+    for (const category of categories) {
+        for (const post of category.posts) {
+            if (post.file == file) {
+                return post !== null && post !== void 0 ? post : { file: '', title: '', description: '' };
+            }
+        }
     }
-    else {
-        throw new Error(`Post not found for ${file}`);
-    }
+    throw new Error(`Post not found for ${file}`);
 });
 const getPostAnchors = () => __awaiter(void 0, void 0, void 0, function* () {
     const postAnchors = Array();
     yield getPosts()
-        .then(posts => {
-        posts.forEach((post, i) => {
-            const anchorElement = document.createElement('a');
-            anchorElement.href = `${ROOT_PATH}/${POST_PATH_PART}/${post.file}`;
-            anchorElement.textContent = post.title;
-            anchorElement.id = `${post.file}-${i}`;
-            anchorElement.classList.add('xhr-link', 'post-link');
-            postAnchors.push({ element: anchorElement, description: post.description });
+        .then(data => {
+        data.forEach((category, i) => {
+            category.posts.forEach((post, i) => {
+                const anchorElement = document.createElement('a');
+                anchorElement.href = `${ROOT_PATH}/${POST_PATH_PART}/${post.file}`;
+                anchorElement.textContent = post.title;
+                anchorElement.id = `${post.file}-${i}`;
+                anchorElement.classList.add('xhr-link', 'post-link');
+                postAnchors.push({ element: anchorElement, description: post.description });
+            });
         });
     }).catch(err => {
         console.log('Error fetching data:', err);
     });
     return postAnchors;
+});
+const getPostListWithCategories = () => __awaiter(void 0, void 0, void 0, function* () {
+    const outerListElement = document.createElement('ul');
+    outerListElement.classList.add('post-list');
+    yield getPosts()
+        .then(data => {
+        data.forEach((category, i) => {
+            const categoryElement = document.createElement('li');
+            categoryElement.textContent = category.category;
+            categoryElement.classList.add('category');
+            const innerListElement = document.createElement('ul');
+            categoryElement.appendChild(innerListElement);
+            category.posts.forEach((post, j) => {
+                const anchorElement = document.createElement('a');
+                anchorElement.href = `${ROOT_PATH}/${POST_PATH_PART}/${post.file}`;
+                anchorElement.textContent = post.title;
+                anchorElement.id = `${post.file}-${i}-${j}`;
+                anchorElement.classList.add('xhr-link', 'post-link');
+                const postElement = document.createElement('li');
+                postElement.appendChild(anchorElement);
+                innerListElement.appendChild(postElement);
+            });
+            outerListElement.appendChild(categoryElement);
+        });
+    }).catch(err => {
+        console.log('Error fetching data:', err);
+    });
+    return outerListElement;
 });
 const loadedPages = new Map();
 const getPages = () => {
@@ -211,4 +241,4 @@ const run = (contentId, postDecorator, pageLinkCallback) => __awaiter(void 0, vo
     window.addEventListener('popstate', handlePopState(CONTENT_ELEMENT, postDecorator, pageLinkCallback));
     document.addEventListener('click', handleLinkClick(CONTENT_ELEMENT, postDecorator, pageLinkCallback));
 });
-export { run, getPostAnchors, getPageAnchors };
+export { run, getPostAnchors, getPageAnchors, getPostListWithCategories };

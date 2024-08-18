@@ -1,21 +1,31 @@
-import {run, getPostAnchors, getPageAnchors, PostAnchor, PageAnchor} from './app/custom-github-spa.js';
+// import {run, getPostAnchors, PostAnchor } from './app/custom-github-spa.js';
+import {run, getPostListWithCategories, getPageAnchors, PageAnchor} from './app/custom-github-spa.js';
 
 var converter = new showdown.Converter();
 document.addEventListener('DOMContentLoaded', async () => {
-    run("content", (content: string) => {
+    run(
+        "content", 
+    // Post decorator
+    (content: string) => {
         return converter.makeHtml(content);
-    }, async (pageLink: string) => {
-        const postsElement = document.getElementById('posts');
+    }, 
+    // Page link callback
+    async (url: string) => {
+        var postsElement = document.getElementById('posts');
         if (postsElement !== null) {
-            console.log(`callback for ${pageLink}: postsElement: ${postsElement}`);
-            const postAnchors = await getPostAnchors();
-    
-            // Display the post anchors
-            postAnchors.forEach((postAnchor:PostAnchor) => {
-                const liElement = document.createElement('li');
-                liElement.innerHTML = `${postAnchor.element.outerHTML} - ${postAnchor.description}`;
-                postsElement.appendChild(liElement);
+            getPostListWithCategories().then((postList) => {
+                postsElement?.appendChild(postList);
             });
+                
+                
+            // const postAnchors = await getPostAnchors();
+    
+            // // Display the post anchors
+            // postAnchors.forEach((postAnchor:PostAnchor) => {
+            //     const liElement = document.createElement('li');
+            //     liElement.innerHTML = `${postAnchor.element.outerHTML} - ${postAnchor.description}`;
+            //     postsElement.appendChild(liElement);
+            // });
         }
     });
 

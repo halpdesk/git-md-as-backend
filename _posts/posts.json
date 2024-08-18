@@ -1,22 +1,52 @@
 [
     {
-        "title": "First entry",
-        "description": "This is my first entry",
-        "file": "entry-1.md"
+        "category": "First category",
+        "posts": [
+            {
+                "title": "Entry 1",
+                "description": "Lorem ipsum",
+                "file": "entry-1.md"
+            },
+            {
+                "title": "Entry 2",
+                "description": "Consectetur adipiscing",
+                "file": "entry-2.md"
+            },
+            {
+                "title": "Entry 3",
+                "description": "Himenaeos venenatis",
+                "file": "entry-3.md"
+            },
+            {
+                "title": "Entry 4",
+                "description": "Sed do eiusmod tempor incididunt",
+                "file": "entry-4.md"
+            }
+        ]
     },
     {
-        "title": "Second entry",
-        "description": "This is my second entry",
-        "file": "entry-2.md"
-    },
-    {
-        "title": "Third entry",
-        "description": "This is my third entry",
-        "file": "entry-3.md"
-    },
-    {
-        "title": "Fourth entry",
-        "description": "This is my fourth entry",
-        "file": "entry-4.md"
+        "category": "Second category",
+        "posts": [
+            {
+                "title": "Entry 5",
+                "description": "Rhoncus vel venenatis fringilla netus fames",
+                "file": "entry-5.md"
+            },
+            {
+                "title": "Entry 6",
+                "description": "Nulla pariatur",
+                "file": "entry-6.md"
+            },
+            {
+                "title": "Entry 7",
+                "description": "Tuis aute irure",
+                "file": "entry-7.md"
+            },
+            {
+                "title": "Entry 8",
+                "description": "Ex urna",
+                "file": "entry-8.md"
+            }
+        ]
     }
 ]

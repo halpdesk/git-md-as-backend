@@ -59,22 +59,25 @@ const handleLinkClick = (element: HTMLElement, postDecorator: Function | undefin
 /*
  *  Posts are loaded from a JSON file that contains an array of Post objects.
  */
+interface Category {
+    category: string;
+    posts: Array<Post>;
+}
 interface Post {
     file: string;
     title: string;
     description: string;
 }
-const loadedPosts: Map<string, Post> = new Map<string, Post>();
+const loadedPosts: Array<Category> = new Array<Category>();
 
-const getPosts = () : Promise<Map<string, Post>> =>
-    loadedPosts.size > 0 ? Promise.resolve(loadedPosts) :
+const getPosts = () : Promise<Array<Category>> =>
+    loadedPosts.length > 0 ? Promise.resolve(loadedPosts) :
     fetch(`${ROOT_PATH}/_posts/posts.json`)
         .then(response => response.text())
         .then(content => {
-            loadedPosts.clear()
-            const posts = JSON.parse(content)
-            for (const post of posts) {
-                loadedPosts.set(post.file, post)
+            const catgories = JSON.parse(content)
+            for (const catgory of catgories) {
+                loadedPosts.push(catgory)
             }
             return loadedPosts
         })
@@ -85,13 +88,17 @@ const getPosts = () : Promise<Map<string, Post>> =>
         
 const getPost = (file: string) : Promise<Post> =>
     getPosts()
-        .then(posts => {
-            if (posts.has(file)) {
-                return posts.get(file) ?? { file: '', title: '', description: '' } as Post
-            } else {
-                throw new Error(`Post not found for ${file}`)
+        .then(categories => {
+            for (const category of categories) {
+                for (const post of category.posts) {
+                    if (post.file == file) {
+                        return post ?? { file: '', title: '', description: '' } as Post
+                    }
+                }
             }
+            throw new Error(`Post not found for ${file}`)
         })
+
 
 interface PostAnchor {
     element: HTMLElement;
@@ -100,19 +107,50 @@ interface PostAnchor {
 const getPostAnchors = async (): Promise<Array<PostAnchor>> => {
     const postAnchors = Array<PostAnchor>();
     await getPosts()
-        .then(posts => {
-            posts.forEach((post, i) => {
-                const anchorElement = document.createElement('a');
-                anchorElement.href = `${ROOT_PATH}/${POST_PATH_PART}/${post.file}`;
-                anchorElement.textContent = post.title;
-                anchorElement.id = `${post.file}-${i}`;
-                anchorElement.classList.add('xhr-link', 'post-link');
-                postAnchors.push({ element: anchorElement, description: post.description });
+        .then(data => {
+            data.forEach((category, i) => {
+                category.posts.forEach((post, i) => {
+                    const anchorElement = document.createElement('a');
+                    anchorElement.href = `${ROOT_PATH}/${POST_PATH_PART}/${post.file}`;
+                    anchorElement.textContent = post.title;
+                    anchorElement.id = `${post.file}-${i}`;
+                    anchorElement.classList.add('xhr-link', 'post-link');
+                    postAnchors.push({ element: anchorElement, description: post.description });
+                });
             });
         }).catch(err => {
             console.log('Error fetching data:', err)
         })
     return postAnchors;
+}
+
+const getPostListWithCategories = async (): Promise<HTMLUListElement> => {
+    const outerListElement = document.createElement('ul');
+    outerListElement.classList.add('post-list');
+    await getPosts()
+        .then(data => {
+            data.forEach((category, i) => {
+                const categoryElement = document.createElement('li');
+                categoryElement.textContent = category.category;
+                categoryElement.classList.add('category');
+                const innerListElement = document.createElement('ul');
+                categoryElement.appendChild(innerListElement);
+                category.posts.forEach((post, j) => {
+                    const anchorElement = document.createElement('a');
+                    anchorElement.href = `${ROOT_PATH}/${POST_PATH_PART}/${post.file}`;
+                    anchorElement.textContent = post.title;
+                    anchorElement.id = `${post.file}-${i}-${j}`;
+                    anchorElement.classList.add('xhr-link', 'post-link');
+                    const postElement = document.createElement('li');
+                    postElement.appendChild(anchorElement);
+                    innerListElement.appendChild(postElement);
+                });
+                outerListElement.appendChild(categoryElement);
+            });
+        }).catch(err => {
+            console.log('Error fetching data:', err)
+        })
+    return outerListElement;
 }
         
 
@@ -251,4 +289,4 @@ const run = async (contentId: string, postDecorator: Function | undefined, pageL
     window.addEventListener('popstate', handlePopState(CONTENT_ELEMENT, postDecorator, pageLinkCallback));
     document.addEventListener('click', handleLinkClick(CONTENT_ELEMENT, postDecorator, pageLinkCallback));
 }
-export { run, getPostAnchors, getPageAnchors, PostAnchor, PageAnchor };
+export { run, getPostAnchors, getPageAnchors, getPostListWithCategories, PostAnchor, PageAnchor };
