@@ -102,21 +102,24 @@ const getPostAnchors = () => __awaiter(void 0, void 0, void 0, function* () {
     return postAnchors;
 });
 const loadedPages = new Map();
-const getPages = () => loadedPages.size > 0 ? Promise.resolve(loadedPages) :
-    fetch(`${ROOT_PATH}/_pages/pages.json`)
-        .then(response => response.text())
-        .then(content => {
-        loadedPages.clear();
-        const pages = JSON.parse(content);
-        for (const page of pages) {
-            loadedPages.set(page.file, page);
-        }
-        return loadedPages;
-    })
-        .catch(err => {
-        console.log('Error loading pages:', err);
-        return loadedPages;
-    });
+const getPages = () => {
+    loadedPages.clear();
+    loadedPages.set("start.html", { file: "start.html", title: "Start", description: "Start page" });
+    return loadedPages.size > 1 ? Promise.resolve(loadedPages) :
+        fetch(`${ROOT_PATH}/_pages/pages.json`)
+            .then(response => response.text())
+            .then(content => {
+            const pages = JSON.parse(content);
+            for (const page of pages) {
+                loadedPages.set(page.file, page);
+            }
+            return loadedPages;
+        })
+            .catch(err => {
+            console.log('Error loading pages:', err);
+            return loadedPages;
+        });
+};
 const getPage = (file) => getPages()
     .then(pages => {
     var _a;
@@ -135,7 +138,7 @@ const getPageAnchors = () => __awaiter(void 0, void 0, void 0, function* () {
             const anchorElement = document.createElement('a');
             anchorElement.href = `${ROOT_PATH}/${PAGES_PATH_PART}/${page.file}`;
             anchorElement.textContent = page.title;
-            anchorElement.id = `${page.file}-${i}`;
+            anchorElement.id = `${page.title}`;
             anchorElement.classList.add('xhr-link', 'page-link');
             pageAnchors.push({ element: anchorElement, description: page.description });
         });
@@ -195,9 +198,16 @@ const loadView = (url, element, postDecorator, pageLinkCallback) => {
 const run = (contentId, postDecorator, pageLinkCallback) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const CONTENT_ELEMENT = (_a = document.getElementById(contentId)) !== null && _a !== void 0 ? _a : document.createElement('div');
-    loadView(window.location.href, CONTENT_ELEMENT, postDecorator, pageLinkCallback);
-    const url = window.location.href;
-    history.pushState({ url: url }, "", url);
+    if (window.location.href == `${ROOT_PATH}/`) {
+        loadView(window.location.href + "/pages/start.html", CONTENT_ELEMENT, postDecorator, pageLinkCallback);
+        const url = `${ROOT_PATH}/pages/start.html`;
+        history.pushState({ url: url }, "", url);
+    }
+    else {
+        loadView(window.location.href, CONTENT_ELEMENT, postDecorator, pageLinkCallback);
+        const url = window.location.href;
+        history.pushState({ url: url }, "", url);
+    }
     window.addEventListener('popstate', handlePopState(CONTENT_ELEMENT, postDecorator, pageLinkCallback));
     document.addEventListener('click', handleLinkClick(CONTENT_ELEMENT, postDecorator, pageLinkCallback));
 });

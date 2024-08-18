@@ -2,7 +2,7 @@
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac purus sit amet. Etiam et ipsum in sapien. In nec ultrices ex. **Quisque facilisis**, ex vel lacinia venenatis, libero ex.
 
-![](https://visme.co/blog/wp-content/uploads/2020/12/header-18.png)
+![](https://visme.co/blog/wp-content/uploads/2020/12/header-17.png)
 
 ## Lorem ipsum
 

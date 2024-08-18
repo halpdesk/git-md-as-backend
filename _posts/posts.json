@@ -8,5 +8,15 @@
         "title": "Second entry",
         "description": "This is my second entry",
         "file": "entry-2.md"
+    },
+    {
+        "title": "Third entry",
+        "description": "This is my third entry",
+        "file": "entry-3.md"
+    },
+    {
+        "title": "Fourth entry",
+        "description": "This is my fourth entry",
+        "file": "entry-4.md"
     }
 ]
